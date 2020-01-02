@@ -38,7 +38,7 @@ def run_locally(arguments):
             model = get_model(config, training_data, validation_data)
             model.train()
 
-def setupLogging(arguments):
+def setup_logging(arguments):
     numpy.set_printoptions(precision=3, linewidth=150)
 
     if arguments["verbose"]:
@@ -71,7 +71,7 @@ def setupLogging(arguments):
 
 def get_model(config, training_data, validation_data):
     return ModelFactory(config,
-        training_data=training_data, validationData=validation_data).create()
+        training_data=training_data, validation_data=validation_data).create()
 
 def get_predictor(config, validation_data):
     return PredictorFactory(config, validation_data).create()
@@ -82,9 +82,9 @@ def get_data(config, name):
     data_sources = DataSources(config)
 
     for source in sources:
-        dataSources.add_source(DataSourceFactory(config).create(source))
+        data_sources.add_source(DataSourceFactory(config).create(source))
 
-    return data_dources
+    return data_sources
 
 def make_experiment(config, arguments):
     config["model"]["directory"] = name_directory(arguments["experiment_name"])

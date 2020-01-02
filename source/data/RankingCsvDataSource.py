@@ -8,7 +8,7 @@ import tensorflow as tf
 class RankingCsvDataSource:
     def __init__(self, config, source_config):
         self.config = config
-        self.sourceConfig = source_config
+        self.source_config = source_config
         self.files = self.get_files()
 
     def get_files(self):
