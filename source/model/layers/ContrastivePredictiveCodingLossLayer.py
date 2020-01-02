@@ -45,6 +45,8 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
     def get_output_embeddings(self):
         embeddings = tf.reshape(self.output_embeddings[:,0:2,:], (-1, self.output_embeddings.shape[2]))
 
+        embeddings = tf.l2_normalize(embeddings, axis=1)
+
         return embeddings
 
     def get_true_classes(self):

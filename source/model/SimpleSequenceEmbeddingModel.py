@@ -82,6 +82,7 @@ class SimpleSequenceEmbeddingModel:
 
         hidden = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(input_embeddings)
         output_embeddings = tf.keras.layers.Conv1D(self.get_layer_size(), 3, padding='causal')(hidden)
+
         output_probabilities = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
 
         loss = ContrastivePredictiveCodingLossLayer(self.config)([labels, output_embeddings, output_probabilities])
