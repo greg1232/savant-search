@@ -65,6 +65,9 @@ class EncoderLayer:
             encoded = result[:, 0, :]
             labels = result[:, 1, :]
 
+            encoded.set_shape((None, None))
+            labels.set_shape((None, None))
+
             return encoded, labels
 
     def get_vocab_path(self):
