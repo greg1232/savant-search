@@ -36,7 +36,7 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
 
         mask = self.labels_mask
 
-        batch_ids = tf.reshape(tf.range(batch_size, dtype=tf.int64), (batch_size, 1))
+        batch_ids = tf.reshape(tf.cast(tf.range(batch_size, dtype=tf.int32), tf.int64), (batch_size, 1))
 
         ids = tf.reshape(tf.zeros((batch_size, 2), dtype=tf.int64) + batch_ids, (-1,))
 
