@@ -20,7 +20,7 @@ class EncoderLayer:
             if not self.does_vocab_file_exist():
                 logger.debug("Building vocab from corpus...")
                 self.encoder = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-                    self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size(), max_corpus_chars=10000)
+                    self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size())
                 logger.debug(" Finished...")
                 self.encoder.save_to_file(self.get_vocab_path())
 
