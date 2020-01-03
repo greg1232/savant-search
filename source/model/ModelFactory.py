@@ -4,6 +4,7 @@ import os
 import tensorflow as tf
 
 from model.SimpleSequenceEmbeddingModel import SimpleSequenceEmbeddingModel
+from model.SimpleAttentionModel import SimpleAttentionModel
 
 class ModelFactory:
     def __init__(self, config, *, training_data=None, validation_data=None):
@@ -17,6 +18,10 @@ class ModelFactory:
 
         if self.model_name == "SimpleSequenceEmbeddingModel":
             return SimpleSequenceEmbeddingModel(self.config,
+                self.training_data, self.validation_data)
+
+        if self.model_name == "SimpleAttentionModel":
+            return SimpleAttentionModel(self.config,
                 self.training_data, self.validation_data)
 
         raise RuntimeError("Unknown model name " + self.model_name)
