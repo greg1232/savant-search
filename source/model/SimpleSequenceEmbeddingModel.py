@@ -43,11 +43,7 @@ class SimpleSequenceEmbeddingModel:
         ]
 
     def predict_on_batch(self, x):
-        embeddings = self.embedding_model.predict_on_batch(x)
-
-        lengths = [len(s) for s in x[0]]
-
-        return embeddings[0:-1:self.get_permutation_count(), lengths, :]
+        return self.embedding_model.predict_on_batch(x)
 
     def checkpoint(self):
         self.training_model.save_weights(self.get_checkpoint_model_directory())
@@ -103,7 +99,12 @@ class SimpleSequenceEmbeddingModel:
         print(model.summary())
 
         self.training_model = model
-        self.embedding_model = tf.keras.Model(inputs=inputs, outputs=output_embeddings)
+
+        document_embeddings = self.get_document_embeddings(output_embeddings, labels)
+        self.embedding_model = tf.keras.Model(inputs=inputs, outputs=document_embeddings)
+
+    def get_document_embeddings(self, output_embeddings, labels):
+        return ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])
 
     def compute_embeddings(self, inputs):
 
