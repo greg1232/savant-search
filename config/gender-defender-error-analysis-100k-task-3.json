@@ -6,14 +6,14 @@
         "layer-size" : 128,
         "layer-count" : 2,
         "vocab-size" : 4096,
-        "batch-size" : 4,
+        "batch-size" : 16,
         "shuffle-window-size" : 16000,
-        "learning-rate": 1e-4,
+        "learning-rate": 1e-3,
         "triplet-margin": 1.0,
-        "contrastive-scale": 1.0,
+        "contrastive-scale": 10.0,
         "predictive-scale": 1.0,
         "permutation-count" : 2,
-        "maximum-corpus-size-for-vocab" : 1e3,
+        "maximum-corpus-size-for-vocab" : 1e6,
         "invert-labels" : false
     },
 
@@ -27,7 +27,7 @@
         {
             "type" : "RankingCsvDataSource",
             "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-train.csv",
-            "maximum-characters" : 2048
+            "maximum-characters" : 4096
         }
 
     ],
@@ -36,6 +36,7 @@
         {
             "type" : "RankingCsvDataSource",
             "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-test.csv",
+            "maximum-characters" : 4096,
             "maximum-size" : 1024
         }
     ]
