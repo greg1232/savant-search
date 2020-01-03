@@ -34,8 +34,8 @@ class SimpleSequenceEmbeddingModel:
         return [
             # Interrupt training if `val_loss` stops improving for over 2 epochs
             #tf.keras.callbacks.EarlyStopping(patience=2, monitor='val_loss'),
-            tf.keras.callbacks.ModelCheckpoint(self.get_best_model_directory(), mode='max',
-                save_best_only=True, verbose=1, save_weights_only=True, monitor='val_cpc'),
+            tf.keras.callbacks.ModelCheckpoint(self.get_best_model_directory(), mode='min',
+                save_best_only=True, verbose=1, save_weights_only=True, monitor='loss'),
             # Write TensorBoard logs to `./logs` directory
             tf.keras.callbacks.TensorBoard(
                 log_dir=os.path.join(self.config['model']['directory'], 'logs'),
@@ -43,7 +43,11 @@ class SimpleSequenceEmbeddingModel:
         ]
 
     def predict_on_batch(self, x):
-        return self.embedding_model.predict_on_batch(x)
+        embeddings = self.embedding_model.predict_on_batch(x)
+
+        lengths = [len(s) for s in x[0]]
+
+        return embeddings[0:-1:self.get_permutation_count(), lengths, :]
 
     def checkpoint(self):
         self.model.save_weights(self.get_checkpoint_model_directory())
@@ -141,4 +145,7 @@ class SimpleSequenceEmbeddingModel:
 
     def get_checkpoint_model_directory(self):
         return os.path.join(self.config['model']['directory'], 'checkpoint.h5')
+
+    def get_permutation_count(self):
+        return int(self.config['model']['permutation-count'])
 

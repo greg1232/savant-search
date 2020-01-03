@@ -5,7 +5,7 @@
         "epochs" : 20,
         "layer-size" : 128,
         "layer-count" : 2,
-        "vocab-size" : 16384,
+        "vocab-size" : 4096,
         "batch-size" : 4,
         "shuffle-window-size" : 16000,
         "learning-rate": 1e-4,
