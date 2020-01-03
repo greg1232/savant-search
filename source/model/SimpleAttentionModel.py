@@ -7,6 +7,7 @@ from model.layers.EncoderLayer import EncoderLayer
 from model.layers.L2NormalizeLayer import L2NormalizeLayer
 from model.layers.ContrastivePredictiveCodingLossLayer import ContrastivePredictiveCodingLossLayer
 from model.layers.ExtractEmbeddingsLayer import ExtractEmbeddingsLayer
+from model.layers.AddPositionEncodingLayer import AddPositionEncodingLayer
 from model.layers.DummyLoss import DummyLoss
 
 import logging
@@ -110,12 +111,12 @@ class SimpleAttentionModel:
 
     def add_attention_layer(self, hidden):
 
-        query = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(hidden)
-        value = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(hidden)
+        query = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
+        value = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
         updated = tf.keras.layers.Attention(use_scale=True, causal=True)([query, value])
 
         result = tf.keras.layers.Add()([updated, hidden])
-        result = tf.keras.layers.LayerNormalization()(result)
+        result = tf.keras.layers.TimeDistributed(tf.keras.layers.LayerNormalization())(result)
 
         return result
 
@@ -126,20 +127,18 @@ class SimpleAttentionModel:
     def compute_embeddings(self, inputs):
 
         encoded_inputs, labels, positions = self.encode_inputs(inputs)
+
+        encoded_inputs = tf.keras.layers.Reshape((-1,))(encoded_inputs)
+
+        positions = tf.keras.layers.Reshape((-1,))(positions)
+
         labels = tf.keras.layers.Reshape((-1, 1))(labels)
         labels = tf.keras.layers.Masking(mask_value=0)(labels)
 
         input_embeddings = tf.keras.layers.Embedding(self.get_input_vocab_size(),
-            self.get_layer_size()//2, mask_zero=True)(encoded_inputs)
-        hidden = tf.keras.layers.Reshape((-1, self.get_layer_size()//2))(input_embeddings)
-        hidden._keras_mask = input_embeddings._keras_mask
+            self.get_layer_size() // 2, mask_zero=True)(encoded_inputs)
 
-        position_embeddings = tf.keras.layers.Embedding(128,
-            self.get_layer_size()//2, mask_zero=True)(positions)
-        position_hidden = tf.keras.layers.Reshape((-1, self.get_layer_size()//2))(position_embeddings)
-        position_hidden._keras_mask = position_hidden._keras_mask
-
-        hidden = tf.keras.layers.Concatenate()([hidden, position_hidden])
+        hidden = AddPositionEncodingLayer(self.config)([input_embeddings, positions])
 
         return hidden, labels
 
