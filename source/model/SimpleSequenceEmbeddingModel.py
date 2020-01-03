@@ -50,7 +50,7 @@ class SimpleSequenceEmbeddingModel:
         return embeddings[0:-1:self.get_permutation_count(), lengths, :]
 
     def checkpoint(self):
-        self.model.save_weights(self.get_checkpoint_model_directory())
+        self.training_model.save_weights(self.get_checkpoint_model_directory())
 
     def create_or_load_model(self):
 
@@ -77,7 +77,7 @@ class SimpleSequenceEmbeddingModel:
         if os.path.exists(self.get_best_model_directory()):
             path = self.get_best_model_directory()
 
-        self.model.load_weights(path, by_name=True)
+        self.training_model.load_weights(path, by_name=True)
         logger.debug("Loading model from : " + path)
 
     def create_model(self):
