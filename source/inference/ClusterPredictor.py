@@ -40,10 +40,10 @@ class ClusterPredictor:
 
     def cluster_embeddings(self, embeddings):
 
+        embeddings_data = [embedding[i, 0, :] for text, embedding in embeddings for i in range(embedding.shape[0])]
+
         cluster_model = sklearn.cluster.KMeans(
             n_clusters=self.get_cluster_count(), random_state=0)
-
-        embeddings_data = [embedding for text, embedding in embeddings]
 
         cluster_model.fit(embeddings_data)
 
