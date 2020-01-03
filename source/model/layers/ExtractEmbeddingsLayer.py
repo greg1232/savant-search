@@ -14,9 +14,12 @@ class ExtractEmbeddingsLayer(tf.keras.layers.Layer):
 
         batch_size = tf.shape(labels_mask)[0]
 
-        lengths = tf.reshape(tf.reduce_sum(tf.cast(self.labels_mask, tf.int64), axis=1) - 1, (batch_size, 1))
+        lengths = tf.reshape(tf.reduce_sum(tf.cast(labels_mask, tf.int64), axis=1) - 1, (batch_size, 1))
 
         embeddings = tf.gather(embeddings, lengths, batch_dims=1, axis=1)
 
         return embeddings[0:-1:self.get_permutation_count(),:]
+
+    def get_permutation_count(self):
+        return int(self.config["model"]["permutation-count"])
 
