@@ -13,6 +13,7 @@ class ClusterPredictor:
         self.config = config
         self.dataset = dataset
         self.model = ModelFactory(config).create()
+        self.row_count = 0
 
     def predict(self):
 
@@ -29,6 +30,11 @@ class ClusterPredictor:
             embeddings = self.model.predict_on_batch(batch[0])
 
             dataset_embeddings.append((batch[0], embeddings))
+
+            self.row_count += 1
+
+            if self.row_count % 1000 == 0:
+                print("Ran inference on", self.row_count, "batches", end="\r")
 
         return dataset_embeddings
 
@@ -65,6 +71,9 @@ class ClusterPredictor:
 
     def get_output_path(self):
         return self.config["output_directory"]
+
+    def get_cluster_count(self):
+        return self.config["predictor"]["cluster_count"]
 
     def should_include_text(self):
         if "predictor" in self.config:
