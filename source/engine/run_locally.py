@@ -143,7 +143,8 @@ def load_config(arguments):
 
     if len(arguments["test_set"]) > 0:
         config["test-data-sources"] = [{ "type" : arguments["data_source_type"],
-                                         "path" : arguments["test_set"] }]
+                                         "path" : arguments["test_set"],
+                                         "maximum-size" : arguments["test_set_size"] }]
 
     config["output_directory"] = arguments["output_directory"]
 

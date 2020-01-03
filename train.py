@@ -29,6 +29,8 @@ def main():
         help = "Override config file arguments")
     parser.add_argument("--test-set", default="",
         help = "The path to the test set to run on.")
+    parser.add_argument("--test-set-size", default=1024,
+        help = "The test set size in example count.")
     parser.add_argument("--data-source-type", default="RankingCsvDataSource",
         help = "The type of dataset.")
     parser.add_argument("-o", "--output-directory", default="predictions.csv",
