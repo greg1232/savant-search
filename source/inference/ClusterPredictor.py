@@ -73,7 +73,7 @@ class ClusterPredictor:
         return self.config["output_directory"]
 
     def get_cluster_count(self):
-        return self.config["predictor"]["cluster_count"]
+        return int(self.config["predictor"]["cluster-count"])
 
     def should_include_text(self):
         if "predictor" in self.config:
