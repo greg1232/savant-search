@@ -8,7 +8,7 @@ class ExtractEmbeddingsLayer(tf.keras.layers.Layer):
         super(ExtractEmbeddingsLayer, self).__init__(**kwargs)
         self.config = config
 
-    def call(inputs, mask=None):
+    def call(self, inputs, mask=None):
         embeddings, labels = inputs
         embeddings_mask, labels_mask = mask
 
