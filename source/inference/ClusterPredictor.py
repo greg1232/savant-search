@@ -6,6 +6,7 @@ import tensorflow as tf
 import csv
 import math
 import numpy
+import sklearn
 
 class ClusterPredictor:
     def __init__(self, config, dataset):

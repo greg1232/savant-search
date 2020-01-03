@@ -34,7 +34,8 @@
     [
         {
             "type" : "RankingCsvDataSource",
-            "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-test.csv"
+            "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-test.csv",
+            "maximum-size" : 1024
         }
     ]
 }
