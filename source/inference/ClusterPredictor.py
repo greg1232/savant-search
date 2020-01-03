@@ -29,7 +29,13 @@ class ClusterPredictor:
         for batch in self.dataset.get_tensorflow_dataset():
             embeddings = self.model.predict_on_batch(batch[0])
 
-            dataset_embeddings.append((batch[0], embeddings))
+            batch_size = batch[0].numpy().shape[0]
+
+            for i in range(batch_size):
+                text = batch[0].numpy()[i]
+                flat_embeddings = embeddings[i,0,:]
+
+                dataset_embeddings.append((text, flat_embeddings))
 
             self.row_count += 1
 
@@ -40,7 +46,7 @@ class ClusterPredictor:
 
     def cluster_embeddings(self, embeddings):
 
-        embeddings_data = [embedding[i, 0, :] for text, embedding in embeddings for i in range(embedding.shape[0])]
+        embeddings_data = [embedding for text, embedding in embeddings]
 
         cluster_model = sklearn.cluster.KMeans(
             n_clusters=self.get_cluster_count(), random_state=0)
@@ -77,7 +83,8 @@ class ClusterPredictor:
 
     def should_include_text(self):
         if "predictor" in self.config:
-            return str(self.config["predictor"]["should-include-text"]).lower() in ['true', '1']
+            if "should-include-text" in self.config["predictor"]:
+                return str(self.config["predictor"]["should-include-text"]).lower() in ['true', '1']
 
         return True
 
