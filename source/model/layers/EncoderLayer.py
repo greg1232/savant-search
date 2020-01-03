@@ -35,10 +35,11 @@ class EncoderLayer:
                 encoded = [self.encoder.encode(str(x.numpy()[0])) for x in encoded]
 
                 # add special tokens for document ends
-                encoded = [ [i + 3 for i in x]  for x in encoded ]
-                labels  = [ x[1:] + [2]         for x in encoded ]
+                encoded   = [ [i + 3 for i in x]  for x in encoded ]
+                labels    = [ x[1:] + [2]         for x in encoded ]
+                positions = [ [1 + (i%127) for i in range(len(x))] for x in encoded ]
 
-                zipped = [ list(zip(x, l)) for x, l in zip(encoded, labels) ]
+                zipped = [ list(zip(x, l, p)) for x, l, p in zip(encoded, labels, positions) ]
 
                 # expand the batch size
                 zipped = [ z for i in range(self.get_permutation_count()) for z in zipped ]
@@ -48,34 +49,38 @@ class EncoderLayer:
                     self.random.shuffle(x)
 
                     # add special tokens for embeddings
-                    x.append((1, 1))
+                    x.append((1, 1, 1 + (len(x) % 127)))
 
-                encoded = [ [e for e, l in x] for x in zipped]
-                labels  = [ [l for e, l in x] for x in zipped]
+                encoded   = [ [e for e, l, p in x] for x in zipped]
+                labels    = [ [l for e, l, p in x] for x in zipped]
+                positions = [ [p for e, l, p in x] for x in zipped]
 
                 # pad
                 max_length = max([len(x) for x in encoded])
 
-                encoded = [x + [0 for i in range(max_length - len(x))] for x in encoded]
-                labels = [x + [0 for i in range(max_length - len(x))] for x in labels]
+                encoded   = [x + [0 for i in range(max_length - len(x))] for x in encoded]
+                labels    = [x + [0 for i in range(max_length - len(x))] for x in labels]
+                positions = [x + [0 for i in range(max_length - len(x))] for x in positions]
 
                 # convert to tensors
-                encoded = tf.convert_to_tensor(list(zip(encoded, labels)), dtype=tf.int64)
+                encoded = tf.convert_to_tensor(list(zip(encoded, labels, positions)), dtype=tf.int64)
 
                 return encoded
 
             result = tf.keras.layers.Lambda(
                 lambda inputs: tf.py_function(encode, [inputs], tf.int64))(inputs)
 
-            result.set_shape((None, 2, None))
+            result.set_shape((None, 3, None))
 
-            encoded = result[:, 0, :]
-            labels = result[:, 1, :]
+            encoded   = result[:, 0, :]
+            labels    = result[:, 1, :]
+            positions = result[:, 2, :]
 
             encoded.set_shape((None, None))
             labels.set_shape((None, None))
+            positions.set_shape((None, None))
 
-            return encoded, labels
+            return encoded, labels, positions
 
     def get_vocab_path(self):
         return os.path.join(self.config['model']['directory'], 'vocab')

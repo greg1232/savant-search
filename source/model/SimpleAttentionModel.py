@@ -6,6 +6,7 @@ import tensorflow as tf
 from model.layers.EncoderLayer import EncoderLayer
 from model.layers.L2NormalizeLayer import L2NormalizeLayer
 from model.layers.ContrastivePredictiveCodingLossLayer import ContrastivePredictiveCodingLossLayer
+from model.layers.ExtractEmbeddingsLayer import ExtractEmbeddingsLayer
 from model.layers.DummyLoss import DummyLoss
 
 import logging
@@ -43,14 +44,10 @@ class SimpleAttentionModel:
         ]
 
     def predict_on_batch(self, x):
-        embeddings = self.embedding_model.predict_on_batch(x)
-
-        lengths = [len(s) for s in x[0]]
-
-        return embeddings[0:-1:self.get_permutation_count(), lengths, :]
+        return self.embedding_model.predict_on_batch(x)
 
     def checkpoint(self):
-        self.model.save_weights(self.get_checkpoint_model_directory())
+        self.training_model.save_weights(self.get_checkpoint_model_directory())
 
     def create_or_load_model(self):
 
@@ -77,7 +74,7 @@ class SimpleAttentionModel:
         if os.path.exists(self.get_best_model_directory()):
             path = self.get_best_model_directory()
 
-        self.model.load_weights(path, by_name=True)
+        self.training_model.load_weights(path, by_name=True)
         logger.debug("Loading model from : " + path)
 
     def create_model(self):
@@ -85,14 +82,18 @@ class SimpleAttentionModel:
 
         input_embeddings, labels = self.compute_embeddings(inputs)
 
-        hidden = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(input_embeddings)
-        hidden = tf.keras.layers.Conv1D(self.get_layer_size(), 3, padding='causal')(hidden)
+        hidden = input_embeddings
+
+        for layer in range(self.get_layer_count()):
+            hidden = self.add_attention_layer(hidden)
 
         output_embeddings = L2NormalizeLayer(axis=2)(hidden)
 
-        output_probabilities = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
+        output_probabilities = tf.keras.layers.TimeDistributed(
+            tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
 
-        loss = ContrastivePredictiveCodingLossLayer(self.config)([labels, output_embeddings, output_probabilities])
+        loss = ContrastivePredictiveCodingLossLayer(self.config)(
+            [labels, output_embeddings, output_probabilities])
 
         model = tf.keras.Model(inputs=inputs, outputs=loss)
 
@@ -103,18 +104,42 @@ class SimpleAttentionModel:
         print(model.summary())
 
         self.training_model = model
-        self.embedding_model = tf.keras.Model(inputs=inputs, outputs=output_embeddings)
+
+        document_embeddings = self.get_document_embeddings(output_embeddings, labels)
+        self.embedding_model = tf.keras.Model(inputs=inputs, outputs=document_embeddings)
+
+    def add_attention_layer(self, hidden):
+
+        query = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(hidden)
+        value = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(hidden)
+        updated = tf.keras.layers.Attention(use_scale=True, causal=True)([query, value])
+
+        result = tf.keras.layers.Add()([updated, hidden])
+        result = tf.keras.layers.LayerNormalization()(result)
+
+        return result
+
+
+    def get_document_embeddings(self, output_embeddings, labels):
+        return ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])
 
     def compute_embeddings(self, inputs):
 
-        encoded_inputs, labels = self.encode_inputs(inputs)
+        encoded_inputs, labels, positions = self.encode_inputs(inputs)
         labels = tf.keras.layers.Reshape((-1, 1))(labels)
         labels = tf.keras.layers.Masking(mask_value=0)(labels)
 
         input_embeddings = tf.keras.layers.Embedding(self.get_input_vocab_size(),
-            self.get_layer_size(), mask_zero=True)(encoded_inputs)
-        hidden = tf.keras.layers.Reshape((-1, self.get_layer_size()))(input_embeddings)
+            self.get_layer_size()//2, mask_zero=True)(encoded_inputs)
+        hidden = tf.keras.layers.Reshape((-1, self.get_layer_size()//2))(input_embeddings)
         hidden._keras_mask = input_embeddings._keras_mask
+
+        position_embeddings = tf.keras.layers.Embedding(128,
+            self.get_layer_size()//2, mask_zero=True)(positions)
+        position_hidden = tf.keras.layers.Reshape((-1, self.get_layer_size()//2))(position_embeddings)
+        position_hidden._keras_mask = position_hidden._keras_mask
+
+        hidden = tf.keras.layers.Concatenate()([hidden, position_hidden])
 
         return hidden, labels
 
@@ -134,6 +159,9 @@ class SimpleAttentionModel:
     def get_layer_size(self):
         return int(self.config["model"]["layer-size"])
 
+    def get_layer_count(self):
+        return int(self.config["model"]["layer-count"])
+
     def get_epochs(self):
         return int(self.config["model"]["epochs"])
 
@@ -148,5 +176,4 @@ class SimpleAttentionModel:
 
     def get_permutation_count(self):
         return int(self.config['model']['permutation-count'])
-
 

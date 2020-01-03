@@ -82,14 +82,17 @@ class SimpleSequenceEmbeddingModel:
 
         input_embeddings, labels = self.compute_embeddings(inputs)
 
-        hidden = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(input_embeddings)
+        hidden = tf.keras.layers.TimeDistributed(
+            tf.keras.layers.Dense(self.get_layer_size()))(input_embeddings)
         hidden = tf.keras.layers.Conv1D(self.get_layer_size(), 3, padding='causal')(hidden)
 
         output_embeddings = L2NormalizeLayer(axis=2)(hidden)
 
-        output_probabilities = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
+        output_probabilities = tf.keras.layers.TimeDistributed(
+            tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
 
-        loss = ContrastivePredictiveCodingLossLayer(self.config)([labels, output_embeddings, output_probabilities])
+        loss = ContrastivePredictiveCodingLossLayer(self.config)(
+            [labels, output_embeddings, output_probabilities])
 
         model = tf.keras.Model(inputs=inputs, outputs=loss)
 
@@ -109,7 +112,7 @@ class SimpleSequenceEmbeddingModel:
 
     def compute_embeddings(self, inputs):
 
-        encoded_inputs, labels = self.encode_inputs(inputs)
+        encoded_inputs, labels, positions = self.encode_inputs(inputs)
         labels = tf.keras.layers.Reshape((-1, 1))(labels)
         labels = tf.keras.layers.Masking(mask_value=0)(labels)
 

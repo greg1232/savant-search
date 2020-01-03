@@ -1,7 +1,7 @@
 {
     "model" :
     {
-        "type" : "SimpleSequenceEmbeddingModel",
+        "type" : "SimpleAttentionModel",
         "epochs" : 20,
         "layer-size" : 128,
         "layer-count" : 2,
