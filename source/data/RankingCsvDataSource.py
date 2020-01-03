@@ -33,7 +33,7 @@ class RankingCsvDataSource:
     def get_tensorflow_dataset(self):
         line_dataset = tf.data.experimental.CsvDataset(self.files, [tf.string, tf.float32])
 
-        if self.has_maximum_size()
+        if self.has_maximum_size():
             line_dataset = line_dataset.take(self.get_maximum_size())
 
         text_dataset = line_dataset.map(lambda x, y : self.load_and_tokenize((x,y)))
