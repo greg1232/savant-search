@@ -54,9 +54,10 @@ class ClusterPredictor:
         cluster_model.fit(embeddings_data)
 
         embedding_clusters = cluster_model.predict(embeddings_data)
+        embedding_distances = cluster_model.transform(embeddings_data)
 
-        embeddings_and_clusters = [(embedding[0], embedding[1], cluster) for
-            embedding, cluster in zip(embeddings, embedding_clusters)]
+        embeddings_and_clusters = [(embedding[0], embedding[1], distances[cluster], cluster) for
+            embedding, cluster, distances in zip(embeddings, embedding_clusters, embedding_distances)]
 
         cluster_centers = cluster_model.cluster_centers_
 
@@ -67,8 +68,8 @@ class ClusterPredictor:
         with open(self.get_output_path(), 'w') as csvFile:
             writer = csv.writer(csvFile, delimiter=',', quotechar='"')
 
-            for text, embedding, cluster in sorted(clusters, key=lambda x: x[2]):
-                row = [embedding, cluster]
+            for text, embedding, distance, cluster in sorted(clusters, key=lambda x: (x[3], x[2])):
+                row = [embedding, distance, cluster]
 
                 if self.should_include_text():
                     row = [text] + row
