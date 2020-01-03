@@ -4,6 +4,7 @@ import os
 import tensorflow as tf
 
 from model.layers.EncoderLayer import EncoderLayer
+from model.layers.L2NormalizeLayer import L2NormalizeLayer
 from model.layers.ContrastivePredictiveCodingLossLayer import ContrastivePredictiveCodingLossLayer
 from model.layers.DummyLoss import DummyLoss
 
@@ -22,7 +23,7 @@ class SimpleSequenceEmbeddingModel:
     def train(self):
 
         with tf.device('/cpu:0'):
-            self.model.fit(x=self.training_dataset.get_tensorflow_dataset(),
+            self.training_model.fit(x=self.training_dataset.get_tensorflow_dataset(),
                 validation_data=self.validation_dataset.get_tensorflow_dataset(),
                 epochs=self.get_epochs(),
                 callbacks=self.get_callbacks())
@@ -38,11 +39,11 @@ class SimpleSequenceEmbeddingModel:
             # Write TensorBoard logs to `./logs` directory
             tf.keras.callbacks.TensorBoard(
                 log_dir=os.path.join(self.config['model']['directory'], 'logs'),
-                update_freq=500)
+                update_freq=100)
         ]
 
     def predict_on_batch(self, x):
-        return self.model.predict_on_batch(x)
+        return self.embedding_model.predict_on_batch(x)
 
     def checkpoint(self):
         self.model.save_weights(self.get_checkpoint_model_directory())
@@ -81,7 +82,9 @@ class SimpleSequenceEmbeddingModel:
         input_embeddings, labels = self.compute_embeddings(inputs)
 
         hidden = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(input_embeddings)
-        output_embeddings = tf.keras.layers.Conv1D(self.get_layer_size(), 3, padding='causal')(hidden)
+        hidden = tf.keras.layers.Conv1D(self.get_layer_size(), 3, padding='causal')(hidden)
+
+        output_embeddings = L2NormalizeLayer(axis=2)(hidden)
 
         output_probabilities = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
 
@@ -95,7 +98,8 @@ class SimpleSequenceEmbeddingModel:
 
         print(model.summary())
 
-        self.model = model
+        self.training_model = model
+        self.embedding_model = tf.keras.Model(inputs=inputs, outputs=output_embeddings)
 
     def compute_embeddings(self, inputs):
 

@@ -20,7 +20,7 @@ class EncoderLayer:
             if not self.does_vocab_file_exist():
                 logger.debug("Building vocab from corpus...")
                 self.encoder = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-                    self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size())
+                    self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size(), max_corpus_chars=1024)
                 logger.debug(" Finished...")
                 self.encoder.save_to_file(self.get_vocab_path())
 
@@ -33,15 +33,21 @@ class EncoderLayer:
 
                 encoded = [self.encoder.encode(str(x.numpy()[0])) for x in encoded]
 
-                # add special tokens for document embeddings/ends
-                encoded = [ [1, 1] + [i + 3 for i in x] for x in encoded ]
-                labels  = [ [1, 1] + x[3:] + [2]        for x in encoded ]
+                # add special tokens for document ends
+                encoded = [ [i + 3 for i in x]  for x in encoded ]
+                labels  = [ x[1:] + [2]         for x in encoded ]
 
-                # shuffle
                 zipped = [ list(zip(x, l)) for x, l in zip(encoded, labels) ]
 
+                # expand the batch size
+                zipped = [ z for i in range(self.get_permutation_count()) for z in zipped ]
+
+                # shuffle
                 for x in zipped:
                     self.random.shuffle(x)
+
+                    # add special tokens for embeddings
+                    x.append((1, 1))
 
                 encoded = [ [e for e, l in x] for x in zipped]
                 labels  = [ [l for e, l in x] for x in zipped]
@@ -81,6 +87,9 @@ class EncoderLayer:
 
     def does_vocab_file_exist(self):
         return os.path.exists(self.get_vocab_path() + ".subwords")
+
+    def get_permutation_count(self):
+        return int(self.config['model']['permutation-count'])
 
 
 

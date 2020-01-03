@@ -31,21 +31,25 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
 
     def get_batch_ids(self):
 
-        batch_size = tf.shape(self.output_embeddings)[0]
+        batch_size = tf.shape(self.output_embeddings)[0] // self.get_permutation_count()
         timesteps = tf.shape(self.output_embeddings)[1]
 
         mask = self.labels_mask
 
         batch_ids = tf.reshape(tf.cast(tf.range(batch_size, dtype=tf.int32), tf.int64), (batch_size, 1))
 
-        ids = tf.reshape(tf.zeros((batch_size, 2), dtype=tf.int64) + batch_ids, (-1,))
+        ids = tf.reshape(tf.zeros((batch_size, self.get_permutation_count()), dtype=tf.int64) + batch_ids, (-1,))
 
         return ids
 
     def get_output_embeddings(self):
-        embeddings = tf.reshape(self.output_embeddings[:,0:2,:], (-1, self.output_embeddings.shape[2]))
+        batch_size = tf.shape(self.labels_mask)[0]
 
-        embeddings = tf.l2_normalize(embeddings, axis=1)
+        lengths = tf.reshape(tf.reduce_sum(tf.cast(self.labels_mask, tf.int64), axis=1) - 1, (batch_size, 1))
+
+        embeddings = tf.gather(self.output_embeddings, lengths, batch_dims=1, axis=1)
+
+        embeddings = tf.reshape(embeddings, (-1, self.output_embeddings.shape[2]))
 
         return embeddings
 
@@ -72,5 +76,8 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
 
     def get_predictive_loss_scale(self):
         return float(self.config["model"]["predictive-scale"])
+
+    def get_permutation_count(self):
+        return int(self.config["model"]["permutation-count"])
 
 
