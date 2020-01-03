@@ -92,8 +92,8 @@ class EncoderLayer:
     def get_permutation_count(self):
         return int(self.config['model']['permutation-count'])
 
-    def get_max_corpus_size_for_vocab(self):
-        return int(self.config['model']['max-corpus-size-for-vocab'])
+    def get_maximum_corpus_size_for_vocab(self):
+        return int(self.config['model']['maximum-corpus-size-for-vocab'])
 
 
 
