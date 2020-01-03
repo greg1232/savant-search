@@ -6,6 +6,7 @@ import tensorflow as tf
 from model.layers.EncoderLayer import EncoderLayer
 from model.layers.L2NormalizeLayer import L2NormalizeLayer
 from model.layers.ContrastivePredictiveCodingLossLayer import ContrastivePredictiveCodingLossLayer
+from model.layers.ExtractEmbeddingsLayer import ExtractEmbeddingsLayer
 from model.layers.DummyLoss import DummyLoss
 
 import logging
