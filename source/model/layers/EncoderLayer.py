@@ -20,7 +20,8 @@ class EncoderLayer:
             if not self.does_vocab_file_exist():
                 logger.debug("Building vocab from corpus...")
                 self.encoder = tfds.features.text.SubwordTextEncoder.build_from_corpus(
-                    self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size(), max_corpus_chars=1024)
+                    self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size(),
+                    max_corpus_chars=self.get_maximum_corpus_size_for_vocab())
                 logger.debug(" Finished...")
                 self.encoder.save_to_file(self.get_vocab_path())
 
@@ -90,6 +91,9 @@ class EncoderLayer:
 
     def get_permutation_count(self):
         return int(self.config['model']['permutation-count'])
+
+    def get_max_corpus_size_for_vocab(self):
+        return int(self.config['model']['max-corpus-size-for-vocab'])
 
 
 

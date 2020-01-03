@@ -13,6 +13,7 @@
         "contrastive-scale": 1.0,
         "predictive-scale": 1.0,
         "permutation-count" : 2,
+        "max-corpus-size-for-vocab" : 1e6,
         "invert-labels" : false
     },
 
