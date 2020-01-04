@@ -1,5 +1,6 @@
 
 from inference.ClusterPredictor import ClusterPredictor
+from inference.EmbeddingPredictor import EmbeddingPredictor
 
 class PredictorFactory:
     def __init__(self, config, dataset):
@@ -10,6 +11,8 @@ class PredictorFactory:
         if self.config["predictor"]["type"] == "ClusterPredictor":
             return ClusterPredictor(self.config, self.dataset)
 
+        if self.config["predictor"]["type"] == "EmbeddingPredictor":
+            return EmbeddingPredictor(self.config, self.dataset)
 
         assert False
 

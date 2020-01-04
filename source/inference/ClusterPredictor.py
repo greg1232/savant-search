@@ -33,7 +33,7 @@ class ClusterPredictor:
 
             for i in range(batch_size):
                 text = batch[0].numpy()[i].decode('utf8')
-                flat_embeddings = embeddings[i,0,:]
+                flat_embeddings = embeddings[i,:]
 
                 dataset_embeddings.append((text, flat_embeddings))
 
@@ -69,7 +69,7 @@ class ClusterPredictor:
             writer = csv.writer(csvFile, delimiter=',', quotechar='"')
 
             for text, embedding, distance, cluster in sorted(clusters, key=lambda x: (x[3], x[2])):
-                row = [embedding, distance, cluster]
+                row = [embedding, cluster_centers[cluster], distance, cluster]
 
                 if self.should_include_text():
                     row = [text] + row

@@ -70,7 +70,7 @@ def load_csv(arguments):
     with open(arguments["input_path"], "r") as input_file:
         reader = csv.reader(input_file, delimiter=',', quotechar='"')
         for row in reader:
-            embedding = numpy.fromstring(row[-3][1:-1], sep=' ').tolist()
+            embedding = numpy.fromstring(row[-4][1:-1], sep=' ').tolist()
             cluster = int(row[-1])
 
             if cluster >= int(arguments["maximum_clusters"]):

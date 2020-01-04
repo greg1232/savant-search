@@ -41,6 +41,7 @@ class SimpleAttentionModel:
             # Write TensorBoard logs to `./logs` directory
             tf.keras.callbacks.TensorBoard(
                 log_dir=os.path.join(self.config['model']['directory'], 'logs'),
+                profile_batch=False,
                 update_freq=100)
         ]
 
