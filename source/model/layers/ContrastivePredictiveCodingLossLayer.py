@@ -17,15 +17,15 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
         contrastive_loss = self.triplet_loss.call(
             self.get_batch_ids(), self.get_output_embeddings())
 
-        contrastive_loss *= self.get_contrastive_loss_scale()
-
         self.add_metric(contrastive_loss, name='contrastive_loss', aggregation='mean')
 
         predictive_loss = self.cross_entropy_loss.call(self.get_true_classes(),
                                                        self.get_output_probabilities())
-        predictive_loss *= self.get_predictive_loss_scale()
 
         self.add_metric(predictive_loss, name='predictive_loss', aggregation='mean')
+
+        contrastive_loss *= self.get_contrastive_loss_scale()
+        predictive_loss *= self.get_predictive_loss_scale()
 
         complete_loss = (contrastive_loss + tf.reduce_mean(predictive_loss))
 

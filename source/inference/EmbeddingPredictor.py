@@ -31,7 +31,7 @@ class EmbeddingPredictor:
 
                 for i in range(batch_size):
                     text = batch[0].numpy()[i].decode('utf8')
-                    flat_embeddings = embeddings[i,:]
+                    flat_embeddings = embeddings[i,0,:]
 
                     row = [flat_embeddings]
 
