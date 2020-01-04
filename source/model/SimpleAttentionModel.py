@@ -37,7 +37,7 @@ class SimpleAttentionModel:
             # Interrupt training if `val_loss` stops improving for over 2 epochs
             #tf.keras.callbacks.EarlyStopping(patience=2, monitor='val_loss'),
             tf.keras.callbacks.ModelCheckpoint(self.get_best_model_directory(), mode='min',
-                save_best_only=True, verbose=1, save_weights_only=True, monitor='val_loss'),
+                save_best_only=True, verbose=1, save_weights_only=True, monitor='val_contrastive_loss'),
             # Write TensorBoard logs to `./logs` directory
             tf.keras.callbacks.TensorBoard(
                 log_dir=os.path.join(self.config['model']['directory'], 'logs'),
