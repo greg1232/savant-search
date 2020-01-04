@@ -2,15 +2,15 @@
     "model" :
     {
         "type" : "SimpleAttentionModel",
-        "epochs" : 20,
+        "epochs" : 200,
         "layer-size" : 128,
-        "layer-count" : 2,
+        "layer-count" : 4,
         "vocab-size" : 4096,
         "batch-size" : 16,
         "shuffle-window-size" : 16000,
         "learning-rate": 1e-3,
         "triplet-margin": 1.0,
-        "contrastive-scale": 10.0,
+        "contrastive-scale": 0.1,
         "predictive-scale": 1.0,
         "permutation-count" : 2,
         "maximum-corpus-size-for-vocab" : 1e6,
