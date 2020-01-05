@@ -41,7 +41,7 @@ class EncoderLayer:
 
                 zipped = [ list(zip(x, l, p)) for x, l, p in zip(encoded, labels, positions) ]
 
-                # expand the batch size
+                # expand the batch size to add multiple permutations
                 zipped = [ z for i in range(self.get_permutation_count()) for z in zipped ]
 
                 # shuffle

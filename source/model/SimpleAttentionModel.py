@@ -37,7 +37,7 @@ class SimpleAttentionModel:
             # Interrupt training if `val_loss` stops improving for over 2 epochs
             #tf.keras.callbacks.EarlyStopping(patience=2, monitor='val_loss'),
             tf.keras.callbacks.ModelCheckpoint(self.get_best_model_directory(), mode='min',
-                save_best_only=True, verbose=1, save_weights_only=True, monitor='val_contrastive_loss'),
+                save_best_only=True, verbose=1, save_weights_only=True, monitor='loss', save_freq=1e5),
             # Write TensorBoard logs to `./logs` directory
             tf.keras.callbacks.TensorBoard(
                 log_dir=os.path.join(self.config['model']['directory'], 'logs'),
@@ -120,7 +120,6 @@ class SimpleAttentionModel:
         result = tf.keras.layers.TimeDistributed(tf.keras.layers.LayerNormalization())(result)
 
         return result
-
 
     def get_document_embeddings(self, output_embeddings, labels):
         return ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])

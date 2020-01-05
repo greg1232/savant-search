@@ -1,6 +1,5 @@
 
 import tensorflow as tf
-import tensorflow_addons as tfa
 
 class AddPositionEncodingLayer(tf.keras.layers.Layer):
     def __init__(self, config, **kwargs):
