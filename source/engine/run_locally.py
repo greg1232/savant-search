@@ -142,9 +142,10 @@ def load_config(arguments):
         config["model"]["directory"] = os.path.dirname(arguments["model_path"])
 
     if len(arguments["test_set"]) > 0:
-        config["test-data-sources"] = [{ "type" : arguments["data_source_type"],
-                                         "path" : arguments["test_set"],
-                                         "maximum-size" : arguments["test_set_size"] }]
+        config["test-data-sources"] = [config["training-data-sources"][0]]
+        config["test-data-sources"][0]["type"] = arguments["data_source_type"]
+        config["test-data-sources"][0]["path"] = arguments["test_set"]
+        config["test-data-sources"][0]["maximum-size"] = arguments["test_set_size"]
 
     config["output_directory"] = arguments["output_directory"]
 
