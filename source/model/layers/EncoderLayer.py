@@ -34,6 +34,12 @@ class EncoderLayer:
 
                 encoded = [self.encoder.encode(str(x.numpy()[0])) for x in encoded]
 
+                # truncate
+                lengths = [len(x) for x in encoded]
+
+                max_lengths = [min(length, self.get_maximum_sequence_length()) for length in lengths]
+                encoded = [x[0:max_length] for x, max_length in zip(encoded, max_lengths)]
+
                 # add special tokens for document ends
                 encoded   = [ [i + 3 for i in x]  for x in encoded ]
                 labels    = [ x[1:] + [2]         for x in encoded ]
@@ -93,6 +99,9 @@ class EncoderLayer:
 
     def does_vocab_file_exist(self):
         return os.path.exists(self.get_vocab_path() + ".subwords")
+
+    def get_maximum_sequence_length(self):
+        return int(self.config['model']['maximum-sequence-length'])
 
     def get_permutation_count(self):
         return int(self.config['model']['permutation-count'])
