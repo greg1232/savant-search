@@ -13,6 +13,7 @@
         "contrastive-scale": 0.1,
         "predictive-scale": 1.0,
         "permutation-count" : 2,
+        "maximum-sequence-length" : 1024,
         "maximum-corpus-size-for-vocab" : 1e6
     },
 
@@ -25,8 +26,7 @@
     [
         {
             "type" : "RankingCsvDataSource",
-            "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-train.csv",
-            "maximum-characters" : 4096
+            "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-train.csv"
         }
 
     ],
@@ -35,7 +35,6 @@
         {
             "type" : "RankingCsvDataSource",
             "path" : "data/gender-defender-unlabeled-splits/100k/task-3/rc-2016-01-all-labels-test.csv",
-            "maximum-characters" : 4096,
             "maximum-size" : 1024
         }
     ]

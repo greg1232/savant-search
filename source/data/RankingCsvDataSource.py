@@ -51,29 +51,13 @@ class RankingCsvDataSource:
             negative = tf.math.logical_not(text_class)
             positive = text_class
 
-        return self.truncate(row[0]), [negative, positive]
-
-    def truncate(self, text):
-        result = text
-        if self.has_maximum_characters():
-            string_length = tf.size(tf.strings.split([text],""))
-            min_length = tf.minimum(string_length, self.get_maximum_characters())
-
-            result = tf.strings.substr(text, 0, min_length)
-
-        return result
+        return row[0], [negative, positive]
 
     def get_path(self):
         return self.source_config['path']
 
     def get_should_invert_class(self):
         return bool(self.config["model"]["invert-labels"])
-
-    def get_maximum_characters(self):
-        return int(self.source_config["maximum-characters"])
-
-    def has_maximum_characters(self):
-        return "maximum-characters" in self.source_config
 
     def get_maximum_size(self):
         return int(self.source_config["maximum-size"])
