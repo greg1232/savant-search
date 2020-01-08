@@ -1,7 +1,8 @@
 
 import tensorflow as tf
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+#AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE=16
 
 class DataSources:
     def __init__(self, config):
