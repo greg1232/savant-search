@@ -44,20 +44,13 @@ class RankingCsvDataSource:
 
         text_class = tf.math.greater(row[1], 1200.0)
 
-        if self.get_should_invert_class():
-            negative = text_class
-            positive = tf.math.logical_not(text_class)
-        else:
-            negative = tf.math.logical_not(text_class)
-            positive = text_class
+        negative = tf.math.logical_not(text_class)
+        positive = text_class
 
         return row[0], [negative, positive]
 
     def get_path(self):
         return self.source_config['path']
-
-    def get_should_invert_class(self):
-        return bool(self.config["model"]["invert-labels"])
 
     def get_maximum_size(self):
         return int(self.source_config["maximum-size"])
