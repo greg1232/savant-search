@@ -146,7 +146,7 @@ class SimpleAttentionModel:
     def encode_inputs(self, inputs):
         self.encoder_layer = EncoderLayer(self.config, self.training_dataset)
 
-        return self.encoder_layer.encode_inputs(inputs)
+        return self.encoder_layer(inputs)
 
     def get_vocab_size(self):
         return self.encoder_layer.get_vocab_size()

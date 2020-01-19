@@ -10,18 +10,22 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class EncoderLayer:
+class EncoderLayer(tf.keras.layers.Layer):
     def __init__(self, config, training_dataset):
+        super(EncoderLayer, self).__init__(dtype=tf.int64, trainable=False, **kwargs)
         self.config = config
         self.training_dataset = training_dataset
 
-    def encode_inputs(self, inputs):
+        self.init()
+
+    def init(self):
         with tf.device('/cpu:0'):
             if not self.does_vocab_file_exist():
                 logger.debug("Building vocab from corpus...")
                 self.encoder = tfds.features.text.SubwordTextEncoder.build_from_corpus(
                     self.training_dataset.get_raw_text_generator(), self.get_target_vocab_size(),
-                    max_corpus_chars=self.get_maximum_corpus_size_for_vocab())
+                    max_corpus_chars=self.get_maximum_corpus_size_for_vocab(),
+                    max_subword_length=self.get_maximum_subword_length())
                 logger.debug(" Finished...")
                 self.encoder.save_to_file(self.get_vocab_path())
 
@@ -29,6 +33,10 @@ class EncoderLayer:
                 self.get_vocab_path())
 
             self.random = random.Random(2)
+
+    @tf.autograph.experimental.do_not_convert
+    def call(self, inputs):
+        with tf.device('/cpu:0'):
 
             def encode(encoded):
 
@@ -73,18 +81,7 @@ class EncoderLayer:
 
                 return encoded
 
-            result = tf.keras.layers.Lambda(
-                lambda inputs: tf.py_function(encode, [inputs], tf.int64))(inputs)
-
-            result.set_shape((None, 3, None))
-
-            encoded   = result[:, 0, :]
-            labels    = result[:, 1, :]
-            positions = result[:, 2, :]
-
-            encoded.set_shape((None, None))
-            labels.set_shape((None, None))
-            positions.set_shape((None, None))
+            result = tf.py_function(encode, [inputs], tf.int64))
 
             return encoded, labels, positions
 
@@ -102,6 +99,9 @@ class EncoderLayer:
 
     def get_maximum_sequence_length(self):
         return int(self.config['model']['maximum-sequence-length'])
+
+    def get_maximum_subword_length(self):
+        return int(self.config['model']['maximum-subword-length'])
 
     def get_permutation_count(self):
         return int(self.config['model']['permutation-count'])
