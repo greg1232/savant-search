@@ -83,6 +83,10 @@ class EncoderLayer(tf.keras.layers.Layer):
 
             result = tf.py_function(encode, [inputs], tf.int64)
 
+            encoded   = result[:, 0, :]
+            labels    = result[:, 1, :]
+            positions = result[:, 2, :]
+
             return encoded, labels, positions
 
     def get_vocab_path(self):
