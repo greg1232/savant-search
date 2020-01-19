@@ -81,7 +81,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
                 return encoded
 
-            result = tf.py_function(encode, [inputs], tf.int64))
+            result = tf.py_function(encode, [inputs], tf.int64)
 
             return encoded, labels, positions
 
