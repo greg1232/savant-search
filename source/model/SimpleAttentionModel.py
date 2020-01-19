@@ -42,7 +42,7 @@ class SimpleAttentionModel:
             # Write TensorBoard logs to `./logs` directory
             tf.keras.callbacks.TensorBoard(
                 log_dir=os.path.join(self.config['model']['directory'], 'logs'),
-                profile_batch=False,
+                profile_batch=self.get_profile_batch(),
                 update_freq=100)
         ]
 
@@ -167,6 +167,14 @@ class SimpleAttentionModel:
 
     def get_learning_rate(self):
         return float(self.config["model"]["learning-rate"])
+
+    def get_profile_batch(self):
+        should_profile = str(self.config["model"]["enable-profiler"]).lower() in ['true', '1']
+
+        if should_profile:
+            return 3
+        else:
+            return False
 
     def get_best_model_directory(self):
         return os.path.join(self.config['model']['directory'], 'best.h5')

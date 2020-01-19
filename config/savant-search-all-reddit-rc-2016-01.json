@@ -15,6 +15,7 @@
         "permutation-count" : 2,
         "maximum-sequence-length" : 1024,
         "maximum-subword-length" : 20,
+        "enable-profiler" : false,
         "maximum-corpus-size-for-vocab" : 1e6
     },
 
