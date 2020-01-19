@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class EncoderLayer(tf.keras.layers.Layer):
-    def __init__(self, config, training_dataset):
+    def __init__(self, config, training_dataset, **kwargs):
         super(EncoderLayer, self).__init__(dtype=tf.int64, trainable=False, **kwargs)
         self.config = config
         self.training_dataset = training_dataset
