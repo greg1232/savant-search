@@ -9,6 +9,7 @@ import random
 import matplotlib.cm as cm
 
 from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +36,18 @@ def plot_tsne_for_csv(arguments):
 
     embeddings, clusters = load_csv(arguments)
 
-    all_tsne_embeddings = TSNE().fit_transform(embeddings)
+    #embeddings = PCA(n_components=20,random_state=0).fit_transform(embeddings)
+    all_tsne_embeddings = TSNE(random_state=0).fit_transform(embeddings)
 
     tsne_embeddings_per_cluster = separate_clusters(clusters, all_tsne_embeddings)
 
     colors = cm.rainbow(numpy.linspace(0, 1, len(tsne_embeddings_per_cluster)))
 
+    i = 0
     for cluster, tsne_embeddings in sorted(tsne_embeddings_per_cluster.items(), key=lambda x:x[0]):
         matplotlib.pyplot.scatter(tsne_embeddings[:, 0], tsne_embeddings[:, 1],
-            label=str(cluster), color=colors[cluster])
+            label=str(cluster), color=colors[i])
+        i += 1
 
     #matplotlib.pyplot.ylim([0.0, 1.05])
     matplotlib.pyplot.xlabel('First Dimension')
@@ -70,7 +74,7 @@ def load_csv(arguments):
     with open(arguments["input_path"], "r") as input_file:
         reader = csv.reader(input_file, delimiter=',', quotechar='"')
         for row in reader:
-            embedding = numpy.fromstring(row[-4][1:-1], sep=' ').tolist()
+            embedding = numpy.fromstring(row[-2][1:-1], sep=' ').tolist()
             cluster = int(row[-1])
 
             if cluster >= int(arguments["maximum_clusters"]):

@@ -9,6 +9,7 @@ from model.layers.ContrastivePredictiveCodingLossLayer import ContrastivePredict
 from model.layers.ExtractEmbeddingsLayer import ExtractEmbeddingsLayer
 from model.layers.AddPositionEncodingLayer import AddPositionEncodingLayer
 from model.layers.DummyLoss import DummyLoss
+from model.layers.ClusterAccuracyLayer import ClusterAccuracyLayer
 
 import logging
 
@@ -82,6 +83,7 @@ class SimpleAttentionModel:
 
     def create_model(self):
         inputs = tf.keras.Input(shape=(None,), dtype=tf.string)
+        classes = tf.keras.Input(shape=(None,), dtype=tf.string)
 
         input_embeddings, labels = self.compute_embeddings(inputs)
 
@@ -98,17 +100,18 @@ class SimpleAttentionModel:
         loss = ContrastivePredictiveCodingLossLayer(self.config)(
             [labels, output_embeddings, output_probabilities])
 
-        model = tf.keras.Model(inputs=inputs, outputs=loss)
+        document_embeddings = self.get_document_embeddings(output_embeddings, labels)
 
-        model.compile(optimizer=tf.keras.optimizers.Adam(self.get_learning_rate()),
+        loss = ClusterAccuracyLayer(self.config)([document_embeddings, classes, loss])
+
+        self.training_model = tf.keras.Model(inputs=[inputs, classes], outputs=loss)
+
+        self.training_model.compile(optimizer=tf.keras.optimizers.Adam(self.get_learning_rate()),
               loss=DummyLoss(),
               metrics=[])
 
-        print(model.summary())
+        print(self.training_model.summary())
 
-        self.training_model = model
-
-        document_embeddings = self.get_document_embeddings(output_embeddings, labels)
         self.embedding_model = tf.keras.Model(inputs=inputs, outputs=document_embeddings)
 
     def add_attention_layer(self, hidden):
@@ -117,10 +120,18 @@ class SimpleAttentionModel:
         value = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
         updated = tf.keras.layers.Attention(use_scale=True, causal=True)([query, value])
 
-        result = tf.keras.layers.Add()([updated, hidden])
-        result = tf.keras.layers.TimeDistributed(tf.keras.layers.LayerNormalization())(result)
+        updated = tf.keras.layers.Add()([updated, hidden])
+        updated = tf.keras.layers.LayerNormalization()(updated)
+        attention_result = tf.keras.layers.Dropout(self.get_dropout())(updated)
 
-        return result
+        updated = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(attention_result)
+        updated = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(updated)
+
+        updated = tf.keras.layers.Add()([attention_result, updated])
+        updated = tf.keras.layers.LayerNormalization()(updated)
+        updated = tf.keras.layers.Dropout(self.get_dropout())(updated)
+
+        return updated
 
     def get_document_embeddings(self, output_embeddings, labels):
         return ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])
@@ -167,6 +178,9 @@ class SimpleAttentionModel:
 
     def get_learning_rate(self):
         return float(self.config["model"]["learning-rate"])
+
+    def get_dropout(self):
+        return float(self.config["model"]["dropout"])
 
     def get_profile_batch(self):
         should_profile = str(self.config["model"]["enable-profiler"]).lower() in ['true', '1']

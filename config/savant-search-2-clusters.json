@@ -1,0 +1,44 @@
+{
+    "model" :
+    {
+        "type" : "SimpleAttentionModel",
+        "epochs" : 200,
+        "layer-size" : 128,
+        "layer-count" : 4,
+        "vocab-size" : 16384,
+        "batch-size" : 16,
+        "shuffle-window-size" : 1024,
+        "learning-rate": 1e-3,
+        "triplet-margin": 1.0,
+        "contrastive-scale": 0.1,
+        "predictive-scale": 1.0,
+        "permutation-count" : 2,
+        "dropout" : 0.1,
+        "maximum-sequence-length" : 1024,
+        "maximum-subword-length" : 20,
+        "enable-profiler" : false,
+        "maximum-corpus-size-for-vocab" : 1e4
+    },
+    "predictor" :
+    {
+        "type" : "ClusterPredictor",
+        "cluster-count" : 32
+    },
+    "training-data-sources" :
+    [
+        {
+            "type" : "RankingCsvDataSource",
+            "path" : "data/reddit-clusters/rc-2016-01-chemistry-pcmasterrace.csv"
+        }
+
+    ],
+    "validation-data-sources" :
+    [
+        {
+            "type" : "RankingCsvDataSource",
+            "path" : "data/reddit-clusters/rc-2016-01-chemistry-pcmasterrace.csv"
+        }
+    ]
+}
+
+

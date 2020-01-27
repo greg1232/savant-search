@@ -35,12 +35,16 @@ class EncoderLayer(tf.keras.layers.Layer):
             self.random = random.Random(2)
 
     @tf.autograph.experimental.do_not_convert
-    def call(self, inputs):
+    def call(self, inputs, training=None):
         with tf.device('/cpu:0'):
 
             def encode(encoded):
 
-                encoded = [self.encoder.encode(str(x.numpy()[0])) for x in encoded]
+                # get strings
+                encoded = [x.numpy()[0].decode('utf8') for x in encoded]
+
+                # encode
+                encoded = [self.encoder.encode(x) for x in encoded]
 
                 # truncate
                 lengths = [len(x) for x in encoded]
@@ -59,11 +63,12 @@ class EncoderLayer(tf.keras.layers.Layer):
                 zipped = [ z for i in range(self.get_permutation_count()) for z in zipped ]
 
                 # shuffle
-                for x in zipped:
-                    self.random.shuffle(x)
+                if training:
+                    for x in zipped:
+                        self.random.shuffle(x)
 
-                    # add special tokens for embeddings
-                    x.append((1, 1, 1 + (len(x) % 127)))
+                        # add special tokens for embeddings
+                        x.append((1, 1, 1 + (len(x) % 127)))
 
                 encoded   = [ [e for e, l, p in x] for x in zipped]
                 labels    = [ [l for e, l, p in x] for x in zipped]
