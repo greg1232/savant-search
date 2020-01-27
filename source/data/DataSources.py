@@ -1,8 +1,7 @@
 
 import tensorflow as tf
 
-#AUTOTUNE = tf.data.experimental.AUTOTUNE
-AUTOTUNE=16
+AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 class DataSources:
     def __init__(self, config):
@@ -19,7 +18,7 @@ class DataSources:
                     dataset = dataset.concatenate(source.get_tensorflow_dataset())
 
             dataset = dataset.shuffle(self.get_shuffle_window_size())
-            dataset = dataset.batch(self.get_mini_batch_size())
+            dataset = self.group_by_sequence_length(dataset)
             dataset = dataset.prefetch(buffer_size=AUTOTUNE)
 
             return dataset
@@ -52,6 +51,32 @@ class DataSources:
                 yield x
             except StopIteration:
                 return
+
+    def group_by_sequence_length(self, dataset):
+
+        def get_length(x, y):
+            return tf.strings.length(x[0])
+
+        boundaries = self.get_bucket_boundaries()
+
+        bucket_transformation = tf.data.experimental.bucket_by_sequence_length(
+            element_length_func = get_length,
+            bucket_boundaries = boundaries,
+            bucket_batch_sizes = [self.get_mini_batch_size() for i in range(len(boundaries) + 1)],
+            padded_shapes=None,
+            padding_values=None,
+            pad_to_bucket_boundary=False,
+            no_padding=True,
+            drop_remainder=True)
+
+        return dataset.apply(bucket_transformation)
+
+    def get_bucket_boundaries(self):
+        base = 2
+
+        bucket_count = int(math.ceil(math.log(self.get_maximum_sequence_length(), base)))
+
+        return [base ** i for i in range(1, bucket_count)]
 
 
 
