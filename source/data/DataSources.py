@@ -79,6 +79,9 @@ class DataSources:
 
         return [base ** i for i in range(1, bucket_count)]
 
+    def get_maximum_sequence_length(self):
+        return int(self.config['model']['maximum-sequence-length'])
+
 
 
 
