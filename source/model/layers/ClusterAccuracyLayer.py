@@ -36,7 +36,7 @@ class ClusterAccuracyLayer(tf.keras.layers.Layer):
 
         accuracy = self.compute_accuracy(document_embeddings, classes)
 
-        loss = loss + tf.cast(accuracy, tf.float32)
+        loss = loss + tf.cast(self.accuracy, tf.float32)
 
         return loss, accuracy
 
