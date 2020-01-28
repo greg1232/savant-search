@@ -7,6 +7,7 @@ from model.layers.EncoderLayer import EncoderLayer
 from model.layers.L2NormalizeLayer import L2NormalizeLayer
 from model.layers.ContrastivePredictiveCodingLossLayer import ContrastivePredictiveCodingLossLayer
 from model.layers.ExtractEmbeddingsLayer import ExtractEmbeddingsLayer
+from model.layers.RemovePermutationLayer import RemovePermutationLayer
 from model.layers.AddPositionEncodingLayer import AddPositionEncodingLayer
 from model.layers.DummyLoss import DummyLoss
 from model.layers.ClusterAccuracyLayer import ClusterAccuracyLayer
@@ -89,18 +90,20 @@ class SimpleAttentionModel:
 
         hidden = input_embeddings
 
-        for layer in range(self.get_layer_count()):
-            hidden = self.add_attention_layer(hidden)
+        #for layer in range(self.get_layer_count()):
+        #    hidden = self.add_attention_layer(hidden)
 
         output_embeddings = L2NormalizeLayer(axis=2)(hidden)
 
         output_probabilities = tf.keras.layers.TimeDistributed(
             tf.keras.layers.Dense(self.get_input_vocab_size()))(output_embeddings)
 
-        loss = ContrastivePredictiveCodingLossLayer(self.config)(
-            [labels, output_embeddings, output_probabilities])
-
         document_embeddings = self.get_document_embeddings(output_embeddings, labels)
+
+        loss = ContrastivePredictiveCodingLossLayer(self.config)(
+            [labels, document_embeddings, output_probabilities])
+
+        document_embeddings = RemovePermutationLayer(self.config)(document_embeddings)
 
         loss = ClusterAccuracyLayer(self.config)([document_embeddings, classes, loss])
 
@@ -118,7 +121,7 @@ class SimpleAttentionModel:
 
         query = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
         value = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
-        updated = tf.keras.layers.Attention(use_scale=True, causal=True)([query, value])
+        updated = tf.keras.layers.Attention(use_scale=True, causal=True, dropout=self.get_dropout())([query, value])
 
         updated = tf.keras.layers.Add()([updated, hidden])
         updated = tf.keras.layers.LayerNormalization()(updated)
@@ -134,7 +137,12 @@ class SimpleAttentionModel:
         return updated
 
     def get_document_embeddings(self, output_embeddings, labels):
-        return ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])
+        output_embeddings = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(output_embeddings)
+
+        pooled_embeddings = tf.keras.layers.GlobalMaxPooling1D()(output_embeddings)
+        document_embeddings = ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])
+
+        return pooled_embeddings + document_embeddings
 
     def compute_embeddings(self, inputs):
 

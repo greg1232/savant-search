@@ -1,7 +1,6 @@
 
 
 import tensorflow as tf
-import tensorflow_addons as tfa
 
 class ExtractEmbeddingsLayer(tf.keras.layers.Layer):
     def __init__(self, config, **kwargs):
@@ -18,8 +17,7 @@ class ExtractEmbeddingsLayer(tf.keras.layers.Layer):
 
         embeddings = tf.gather(embeddings, lengths, batch_dims=1, axis=1)
 
-        return embeddings[0:-1:self.get_permutation_count(),:]
+        embeddings = tf.reshape(embeddings, (batch_size, embeddings.shape[-1]))
 
-    def get_permutation_count(self):
-        return int(self.config["model"]["permutation-count"])
+        return embeddings
 
