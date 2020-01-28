@@ -3,11 +3,11 @@
     {
         "type" : "SimpleAttentionModel",
         "epochs" : 200,
-        "layer-size" : 128,
+        "layer-size" : 256,
         "layer-count" : 4,
         "vocab-size" : 16384,
         "batch-size" : 16,
-        "shuffle-window-size" : 1024,
+        "shuffle-window-size" : 20000,
         "learning-rate": 1e-3,
         "triplet-margin": 1.0,
         "contrastive-scale": 1.0,

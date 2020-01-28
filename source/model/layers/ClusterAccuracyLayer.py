@@ -47,7 +47,7 @@ class ClusterAccuracyLayer(tf.keras.layers.Layer):
             assert self.window % batch_size == 0, "Batch size does not evenly divide the window " + str(batch_size)
 
             self.classes[self.step:self.step + batch_size] = [class_name.decode('utf8') for class_name in classes_tensor.numpy()[:,0]]
-            self.document_embeddings[self.step:self.step + batch_size, :] = document_embeddings_tensor.numpy()[:,0,:]
+            self.document_embeddings[self.step:self.step + batch_size, :] = document_embeddings_tensor.numpy()[:,:]
 
             self.step = (self.step + batch_size) % self.window
             if (self.step % self.update_step) != 0:

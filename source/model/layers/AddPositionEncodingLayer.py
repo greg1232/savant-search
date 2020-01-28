@@ -11,7 +11,9 @@ class AddPositionEncodingLayer(tf.keras.layers.Layer):
         embeddings, positions = inputs
 
         position_embeddings = self.positional_encoding(positions)
-        return tf.concat([embeddings, position_embeddings], -1)
+        result = tf.concat([embeddings, position_embeddings], -1)
+
+        return result
 
     def compute_mask(self, inputs, mask=None):
 

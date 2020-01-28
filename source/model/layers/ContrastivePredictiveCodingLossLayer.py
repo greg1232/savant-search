@@ -11,11 +11,11 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
         self.cross_entropy_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     def call(self, inputs, mask=None):
-        self.labels, self.output_embeddings, self.output_probabilities = inputs
-        self.labels_mask, self.output_embeddings_mask, self.output_probabilities_mask = mask
+        self.labels, self.document_embeddings, self.output_probabilities = inputs
+        self.labels_mask, self.document_embeddings_mask, self.output_probabilities_mask = mask
 
         contrastive_loss = self.triplet_loss.call(
-            self.get_batch_ids(), self.get_output_embeddings())
+            self.get_batch_ids(), self.get_document_embeddings())
 
         self.add_metric(contrastive_loss, name='contrastive_loss', aggregation='mean')
 
@@ -33,10 +33,7 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
 
     def get_batch_ids(self):
 
-        batch_size = tf.shape(self.output_embeddings)[0] // self.get_permutation_count()
-        timesteps = tf.shape(self.output_embeddings)[1]
-
-        mask = self.labels_mask
+        batch_size = tf.shape(self.labels_mask)[0] // 2
 
         batch_ids = tf.reshape(tf.cast(tf.range(batch_size, dtype=tf.int32), tf.int64), (batch_size, 1))
 
@@ -44,16 +41,8 @@ class ContrastivePredictiveCodingLossLayer(tf.keras.layers.Layer):
 
         return ids
 
-    def get_output_embeddings(self):
-        batch_size = tf.shape(self.labels_mask)[0]
-
-        lengths = tf.reshape(tf.reduce_sum(tf.cast(self.labels_mask, tf.int64), axis=1) - 1, (batch_size, 1))
-
-        embeddings = tf.gather(self.output_embeddings, lengths, batch_dims=1, axis=1)
-
-        embeddings = tf.reshape(embeddings, (-1, self.output_embeddings.shape[2]))
-
-        return embeddings
+    def get_document_embeddings(self):
+        return self.document_embeddings
 
     def get_true_classes(self):
         mask = self.labels_mask
