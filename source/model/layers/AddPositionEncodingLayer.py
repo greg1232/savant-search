@@ -13,7 +13,7 @@ class AddPositionEncodingLayer(tf.keras.layers.Layer):
         position_embeddings = self.positional_encoding(positions)
         result = tf.concat([embeddings, position_embeddings], -1)
 
-        return result
+        return position_embeddings + embeddings
 
     def compute_mask(self, inputs, mask=None):
 
@@ -25,17 +25,20 @@ class AddPositionEncodingLayer(tf.keras.layers.Layer):
         return embeddings_mask
 
     def get_angles(self, pos, i):
-        hidden_size = self.get_layer_size() // 2
+        hidden_size = self.get_layer_size()
 
         dw = tf.constant(hidden_size, dtype=tf.float32)
 
         exp = 2.0 * (tf.cast(i, dtype=tf.float32) // 2.0)
-        angle_rates = 1.0 / tf.math.pow(10000.0, (exp / dw))
+        angle_rates = tf.exp(exp * -(tf.math.log(10000.0) / dw))
 
         return tf.cast(pos, dtype=tf.float32) * angle_rates
 
     def positional_encoding(self, positions):
-        hidden_size = self.get_layer_size() // 2
+        hidden_size = self.get_layer_size()
+
+        batch_size = tf.shape(positions)[0]
+        timesteps = tf.shape(positions)[1]
 
         angle_rads = self.get_angles(tf.expand_dims(positions,-1),
             tf.expand_dims(tf.expand_dims(tf.range(hidden_size), 0), 0))
@@ -43,6 +46,8 @@ class AddPositionEncodingLayer(tf.keras.layers.Layer):
         PE_sin = tf.sin(angle_rads[:, :, 1::2])
 
         pos_encoding = tf.concat([PE_cos, PE_sin], axis=-1)
+
+        pos_encoding = tf.reshape(pos_encoding, (batch_size, timesteps, self.get_layer_size()))
 
         return pos_encoding
 
