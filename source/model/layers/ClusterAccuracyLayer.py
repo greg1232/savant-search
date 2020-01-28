@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 
 class ClusterAccuracyLayer(tf.keras.layers.Layer):
     def __init__(self, config, window=512, update_step = 128, **kwargs):
-        super(ClusterAccuracyLayer, self).__init__(trainable=False, **kwargs)
+        super(ClusterAccuracyLayer, self).__init__(**kwargs)
         self.config = config
 
         self.kmeans = KMeans(n_clusters=2, random_state=0)
@@ -35,8 +35,6 @@ class ClusterAccuracyLayer(tf.keras.layers.Layer):
         document_embeddings, classes, loss = inputs
 
         accuracy = self.compute_accuracy(document_embeddings, classes)
-
-        loss = loss + tf.cast(self.accuracy, tf.float32)
 
         return loss, accuracy
 
