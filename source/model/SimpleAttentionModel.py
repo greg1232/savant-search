@@ -90,8 +90,8 @@ class SimpleAttentionModel:
 
         hidden = input_embeddings
 
-        #for layer in range(self.get_layer_count()):
-        #    hidden = self.add_attention_layer(hidden)
+        for layer in range(self.get_layer_count()):
+            hidden = self.add_attention_layer(hidden)
 
         output_embeddings = L2NormalizeLayer(axis=2)(hidden)
 
@@ -119,16 +119,16 @@ class SimpleAttentionModel:
 
     def add_attention_layer(self, hidden):
 
-        query = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
-        value = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(hidden)
+        query = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(hidden)
+        value = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(hidden)
         updated = tf.keras.layers.Attention(use_scale=True, causal=True, dropout=self.get_dropout())([query, value])
 
         updated = tf.keras.layers.Add()([updated, hidden])
         updated = tf.keras.layers.LayerNormalization()(updated)
         attention_result = tf.keras.layers.Dropout(self.get_dropout())(updated)
 
-        updated = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size(), activation='relu'))(attention_result)
-        updated = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(updated)
+        updated = tf.keras.layers.Dense(self.get_layer_size(), activation='relu')(attention_result)
+        updated = tf.keras.layers.Dense(self.get_layer_size())(updated)
 
         updated = tf.keras.layers.Add()([attention_result, updated])
         updated = tf.keras.layers.LayerNormalization()(updated)
@@ -138,6 +138,8 @@ class SimpleAttentionModel:
 
     def get_document_embeddings(self, output_embeddings, labels):
         output_embeddings = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(self.get_layer_size()))(output_embeddings)
+
+        output_embeddings = L2NormalizeLayer(axis=2)(output_embeddings)
 
         pooled_embeddings = tf.keras.layers.GlobalMaxPooling1D()(output_embeddings)
         document_embeddings = ExtractEmbeddingsLayer(self.config)([output_embeddings, labels])
@@ -156,7 +158,7 @@ class SimpleAttentionModel:
         labels = tf.keras.layers.Masking(mask_value=0)(labels)
 
         input_embeddings = tf.keras.layers.Embedding(self.get_input_vocab_size(),
-            self.get_layer_size() // 2, mask_zero=True)(encoded_inputs)
+            self.get_layer_size(), mask_zero=True)(encoded_inputs)
 
         hidden = AddPositionEncodingLayer(self.config)([input_embeddings, positions])
 
